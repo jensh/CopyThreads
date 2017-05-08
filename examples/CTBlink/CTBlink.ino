@@ -21,7 +21,7 @@ void yield() {
 }
 
 
-void blink1(void *arg) {
+void blink1(void) {
 	for (unsigned i = 0; i < 10; i++) {
 		Serial.print("LED1 "); Serial.println(i);
 		digitalWrite(LED_PIN1, HIGH);
@@ -32,12 +32,13 @@ void blink1(void *arg) {
 }
 
 
-void blink2(void *arg) {
+void blink2(int arg) {
 	for (unsigned i = 0; i < 10; i++) {
-		Serial.print("LED2 "); Serial.println(i);
-		digitalWrite(LED_PIN2, HIGH);
+		Serial.print("LED2 "); Serial.print(i);
+		Serial.print(" pin "); Serial.println(arg);
+		digitalWrite(arg, HIGH);
 		delay(800);
-		digitalWrite(LED_PIN2, LOW);
+		digitalWrite(arg, LOW);
 		delay(800);
 	}
 }
@@ -45,8 +46,8 @@ void blink2(void *arg) {
 
 // the loop function runs over and over again forever
 void loop() {
-	cth_start(blink1, NULL);
-	cth_start(blink2, NULL);
+	cth_start(blink1);
+	cth_start(blink2, LED_PIN2); // int arg example
 
 	// Run threads until all are done.
 	cth_run();
