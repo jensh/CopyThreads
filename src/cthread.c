@@ -1,0 +1,161 @@
+/*
+ * (c) 2017-05-08 Jens Hauke <jens.hauke@4k2.de>
+ */
+#include <stdlib.h>
+#include <alloca.h>
+#include <string.h>
+#include <setjmp.h>
+
+
+#define CTH_STATE_START		0
+#define CTH_STATE_RUNNING	1
+#define CTH_STATE_DONE		2
+
+/*
+ * Threads running
+ */
+typedef struct {
+	unsigned state:4;
+	union {
+		struct {
+			void (*start)(void *priv);
+			void *priv;
+		} start;
+		struct {
+			jmp_buf jmp_buf;
+		} running;
+	} u;
+	void *stack;
+} cth_running_t;
+
+
+void *cth_base_ptr;
+jmp_buf cth_jmp_buf;
+cth_running_t *cth_running = NULL;
+unsigned cth_running_n = 0;
+cth_running_t *cth_current = NULL;
+
+
+static inline
+unsigned cth_current_idx(void) {
+	return cth_current - cth_running;
+}
+
+
+void cth_start(void (*start)(void *priv), void *priv) {
+	unsigned i;
+	cth_running_t *cth_new;
+
+	// Find a free slot:
+	for (i = 0;; i++) {
+		if (i == cth_running_n) {
+			// Append
+			unsigned idx_current = cth_current - cth_running;
+			cth_running_n++;
+			cth_running = realloc(cth_running, sizeof(cth_running_t) * cth_running_n);
+
+			cth_current = &cth_running[idx_current]; // Update cth_current
+			cth_new = &cth_running[i];
+			break;
+		}
+		cth_new = &cth_running[i];
+
+		if (cth_new->state == CTH_STATE_DONE) {
+			// Use free slot
+			break;
+		}
+	}
+	cth_new->state = CTH_STATE_START;
+	cth_new->u.start.start = start;
+	cth_new->u.start.priv = priv;
+}
+
+
+static inline
+void _cth_exit(void) {
+	free(cth_current->stack);
+	cth_current->state = CTH_STATE_DONE;
+}
+
+
+void cth_run(void) {
+	cth_base_ptr = alloca(0);
+	while (cth_running_n) {
+		switch (cth_current->state) {
+		case CTH_STATE_START:
+			if (!setjmp(cth_jmp_buf)) {
+				cth_current->state = CTH_STATE_RUNNING;
+				cth_current->stack = NULL;
+				cth_current->u.start.start(cth_current->u.start.priv);
+				_cth_exit();
+			}
+			break;
+		case CTH_STATE_RUNNING:
+			if (!setjmp(cth_jmp_buf)) {
+				longjmp(cth_current->u.running.jmp_buf, 1);
+				// never be here
+				// assert(0);
+			}
+			break;
+		}
+
+		cth_current++;
+		if (cth_current == cth_running + cth_running_n) {
+			// Cleanup
+			while (cth_running[cth_running_n - 1].state == CTH_STATE_DONE) {
+				cth_running_n--;
+				if (!cth_running_n) break;
+			}
+			cth_running = realloc(cth_running, sizeof(cth_running_t) * cth_running_n);
+
+			// restart loop
+			cth_current = cth_running;
+		}
+	}
+}
+
+
+static inline
+void _cth_backup_stack(char *sp, unsigned stack_size) {
+//	assert((void*)sp < cth_base_ptr);
+
+	cth_current->stack = realloc(cth_current->stack, stack_size);
+	// printf("#%u backup  stack of size %4u %p to   %p\n", cth_current_idx(), stack_size, sp, cth_current->stack);
+
+	memcpy(cth_current->stack, sp, stack_size);
+}
+
+
+static inline
+void _cth_restore_stack(char *sp, unsigned stack_size) {
+//	printf("#%u restore stack of size %4u %p from %p\n", cth_current_idx(), stack_size, sp, cth_current->stack);
+//	volatile char x;
+	memcpy(sp,
+	       cth_current->stack,
+	       stack_size);
+//	x = *sp; // Use *sp. With -O1 gcc sometimes remove the memcpy, when sp is not used afterwards.
+	__asm__ __volatile__("":: "r" (sp)); // "Use" sp
+}
+
+
+void cth_yield(void) __attribute__ ((noinline));
+void cth_yield(void) {
+	unsigned stack_size;
+	void *sp;
+
+	sp = alloca(0);
+	stack_size = cth_base_ptr - sp;
+
+	_cth_backup_stack(sp, stack_size);
+
+	if (!setjmp(cth_current->u.running.jmp_buf)) {
+		longjmp(cth_jmp_buf, 1);
+		// Never be here
+	}
+
+	// Recalculate sp and stack_size! (might be clobbered by longjmp)
+	sp = alloca(0);
+	stack_size = cth_base_ptr - sp;
+
+	_cth_restore_stack(sp, stack_size);
+}
