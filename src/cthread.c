@@ -133,12 +133,9 @@ void cth_run(void) {
 			}
 			break;
 		case CTH_STATE_RUNNING:
-			if (!setjmp(cth_jmp_buf)) {
-				longjmp(cth_current->u.running.jmp_buf, 1);
-				// never be here
-				// assert(0);
-			}
-			break;
+			longjmp(cth_current->u.running.jmp_buf, 1);
+			// never be here
+			// assert(0);
 		}
 
 		cth_current++;
