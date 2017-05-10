@@ -133,17 +133,17 @@ Missing features / ToDos
 
 Alternative approaches for concurrent programming
 -------------------------------------------------
- * Protothread
+ * Protothread  
    Stackless threads. Just do not use the stack.  
    [https://en.wikipedia.org/wiki/Protothread](https://en.wikipedia.org/wiki/Protothread)  
    [http://dunkels.com/adam/pt/index.html](http://dunkels.com/adam/pt/index.html)
 
- * Split stacks
+ * Split stacks  
    Grow the stack only when needed. Each function verifies that it has
    enough space in the current stack to execute.  
    [https://gcc.gnu.org/wiki/SplitStacks](https://gcc.gnu.org/wiki/SplitStacks)
 
- * Event-driven programming
+ * Event-driven programming  
    Trigger a callback, when an event happens (e.g. can read from X or
    timeout 2sec expired...)  
    [https://en.wikipedia.org/wiki/Event-driven_programming](https://en.wikipedia.org/wiki/Event-driven_programming)
