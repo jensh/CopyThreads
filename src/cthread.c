@@ -29,7 +29,7 @@ typedef struct {
 } cth_running_t;
 
 
-void *cth_base_ptr;
+void *cth_base_ptr = NULL;
 jmp_buf cth_jmp_buf;
 cth_running_t *cth_running = NULL;
 unsigned cth_running_n = 0;
@@ -42,9 +42,10 @@ unsigned cth_current_idx(void) {
 }
 
 
-void cth_start(void (*start)(void *priv), void *priv) {
-	unsigned i;
+static inline
+cth_running_t *cth_slot_allocate(void) {
 	cth_running_t *cth_new;
+	unsigned i;
 
 	// Find a free slot:
 	for (i = 0;; i++) {
@@ -65,6 +66,27 @@ void cth_start(void (*start)(void *priv), void *priv) {
 			break;
 		}
 	}
+	return cth_new;
+}
+
+
+static inline
+void cth_slots_cleanup_and_start(void) {
+	while (cth_running[cth_running_n - 1].state == CTH_STATE_DONE) {
+		cth_running_n--;
+		if (!cth_running_n) break;
+	}
+	cth_running = realloc(cth_running, sizeof(cth_running_t) * cth_running_n);
+
+	// restart loop
+	cth_current = cth_running;
+}
+
+
+void cth_start(void (*start)(void *priv), void *priv) {
+	unsigned i;
+	cth_running_t *cth_new = cth_slot_allocate();
+
 	cth_new->state = CTH_STATE_START;
 	cth_new->u.start.start = start;
 	cth_new->u.start.priv = priv;
@@ -79,7 +101,10 @@ void _cth_exit(void) {
 
 
 void cth_run(void) {
+	if (cth_base_ptr) return; // Already running
+
 	cth_base_ptr = alloca(0);
+
 	while (cth_running_n) {
 		switch (cth_current->state) {
 		case CTH_STATE_START:
@@ -101,17 +126,11 @@ void cth_run(void) {
 
 		cth_current++;
 		if (cth_current == cth_running + cth_running_n) {
-			// Cleanup
-			while (cth_running[cth_running_n - 1].state == CTH_STATE_DONE) {
-				cth_running_n--;
-				if (!cth_running_n) break;
-			}
-			cth_running = realloc(cth_running, sizeof(cth_running_t) * cth_running_n);
-
-			// restart loop
-			cth_current = cth_running;
+			cth_slots_cleanup_and_start();
 		}
 	}
+
+	cth_base_ptr = NULL;
 }
 
 
@@ -142,6 +161,8 @@ void cth_yield(void) __attribute__ ((noinline));
 void cth_yield(void) {
 	unsigned stack_size;
 	void *sp;
+
+	if (!cth_base_ptr) return; // cth_run() not called.
 
 	sp = alloca(0);
 	stack_size = cth_base_ptr - sp;
