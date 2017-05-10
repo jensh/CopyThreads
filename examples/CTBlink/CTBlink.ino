@@ -23,7 +23,7 @@
 
   2017-05-08 Jens Hauke <jens.hauke@4k2.de>
 */
-#include <cthread.h>
+#include <Cth.h>
 
 #define LED_PIN1 12
 #define LED_PIN2 13
@@ -37,7 +37,7 @@ void setup() {
 
 
 void yield() {
-	cth_yield();
+	Cth.yield();
 }
 
 
@@ -66,11 +66,11 @@ void blink2(int arg) {
 
 // the loop function runs over and over again forever
 void loop() {
-	cth_start(blink1);
-	cth_start(blink2, LED_PIN2); // int arg example
+	Cth.start(blink1);
+	Cth.start(blink2, LED_PIN2); // int arg example
 
 	// Run threads until all are done.
-	cth_run();
+	Cth.run();
 
 	Serial.println("restart");
 }

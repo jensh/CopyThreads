@@ -21,7 +21,7 @@
 
   2017-05-10 Jens Hauke <jens.hauke@4k2.de>
 */
-#include <cthread.h>
+#include <Cth.h>
 
 void setup() {
 	Serial.begin (115200);
@@ -31,14 +31,14 @@ void setup() {
 
 void yield() {
 	// yield is called within delay()
-	cth_yield();
+	Cth.yield();
 }
 
 
 // Thread 1
 void readwrite(void) {
 	while (true) {
-		while (!Serial.available()) cth_yield();
+		while (!Serial.available()) Cth.yield();
 
 		// Read text. To not block other threads,
 		// call Serial.setTimeout(0) before!
@@ -65,8 +65,8 @@ void counter(int delay_ms) {
 
 
 void loop() {
-	cth_start(readwrite);
-	cth_start(counter, 5000);
+	Cth.start(readwrite);
+	Cth.start(counter, 5000);
 
-	cth_run();
+	Cth.run();
 }

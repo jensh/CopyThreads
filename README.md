@@ -2,8 +2,8 @@ CopyThreads: A lightweight threading library
 ==============================================
 
 tl;dr
-Create your threads by `cth_start(start_func, arg)`, call `cth_yield()`
-instead of blocking and run until all threads are done with `cth_run()`.
+Create your threads by `Cth.start(start_func, arg)`, call `Cth.yield()`
+instead of blocking and run until all threads are done with `Cth.run()`.
 
 The main idea of CopyThreads is to copy the stack to the heap when
 switching to another thread. There the name "CopyThreads" comes
@@ -61,25 +61,25 @@ Arduino usage
 Include the CopyThreads header to your project
 
 ```C++
-#include <cthread.h>
+#include <Cth.h>
 ```
 
 If you use `delay()`, you should implement `yield()` and call
-`cth_yield()` within:
+`Cth.yield()` within:
 
 ```C++
 void yield() {
-	cth_yield();
+	Cth.yield();
 }
 ```
 
 A thread is a void function with at most one argument fitting inside a
-long. It is started with `cth_start(athread, some_arg)` and runs until
+long. It is started with `Cth.start(athread, some_arg)` and runs until
 the function returns. The thread should use ONLY non blocking functions
 (e.g. `Stream.available()` or `Stream.read()` but NOT
 `Stream.readString()` without `setTimeout(0)`). Time consuming or busy
-waiting loops should call `cth_yield()` to give cpu time to other
-threads. `delay()` is allowed, as it implicitly calls `cth_yield()`
+waiting loops should call `Cth.yield()` to give cpu time to other
+threads. `delay()` is allowed, as it implicitly calls `Cth.yield()`
 when you implement `yield()` as shown above.
 
 
@@ -87,7 +87,7 @@ when you implement `yield()` as shown above.
 void athread(void) {
 	while (true) {
 		// busy wait for input
-		while (!Serial.available()) cth_yield();
+		while (!Serial.available()) Cth.yield();
 
 		int ch = Serial.read();
 		Serial.print(ch);
@@ -99,8 +99,8 @@ The `loop` should start the first thread(s) and run them.
 
 ```C++
 void loop() {
-	cth_start(athread);
-	cth_run();
+	Cth.start(athread);
+	Cth.run();
 }
 ```
 
@@ -112,6 +112,37 @@ void loop() {
 
 Plain C
 -----------
+
+Include the CopyThreads header `cthread.h` to your project. Define a
+thread with a void function with one `void *` argument. Yield with
+`cth_yield()` to switch to the next thread. Start a thread with
+`cth_start(athread, an_arg)`. Run all threads with `cth_run()`.
+
+```C
+#include <cthread.h>
+
+void athread(void *arg) {
+	char *name = (char *)arg;
+	unsigned i;
+
+	for (i = 0; i < 4; i++) {
+		printf("Thread %s loop %u\n", name, i);
+		cth_yield();
+	}
+}
+
+
+int main(int argc, char **argv)
+{
+	cth_start(athread, "th1");
+	cth_start(athread, "th2");
+
+	cth_run();
+
+	printf("All threads are done\n");
+	return 0;
+}
+```
 
 ### Examples
  * Hello World [./examples/c/hello_world.c](./examples/c/hello_world.c).
