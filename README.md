@@ -75,13 +75,14 @@ void yield() {
 ```
 
 A thread is a void function with at most one argument fitting inside a
-long. It is started with `Cth.start(athread, some_arg)` and runs until
-the function returns. The thread should use ONLY non blocking functions
-(e.g. `Stream.available()` or `Stream.read()` but NOT
-`Stream.readString()` without `setTimeout(0)`). Time consuming or busy
-waiting loops should call `Cth.yield()` to give cpu time to other
+void pointer. It is started with `Cth.start(athread, some_arg)` and
+runs until the function returns. The thread should use ONLY non
+blocking functions (e.g. `Stream.available()` or `Stream.read()` but
+NOT `Stream.readString()` without `setTimeout(0)`). Time consuming or
+busy waiting loops should call `Cth.yield()` to give cpu time to other
 threads. `delay()` is allowed, as it implicitly calls `Cth.yield()`
-when you implement `yield()` as shown above (But prefer `Cth.delay()`!).
+when you implement `yield()` as shown above (But prefer
+`Cth.delay()`!).
 
 
 ```C++
