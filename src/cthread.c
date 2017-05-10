@@ -26,8 +26,9 @@
 
 
 #define CTH_STATE_START		0
-#define CTH_STATE_RUNNING	1
-#define CTH_STATE_DONE		2
+#define CTH_STATE_WAITING	1
+#define CTH_STATE_RUNNING	2
+#define CTH_STATE_DONE		3
 
 /*
  * Threads running
@@ -52,6 +53,11 @@ static jmp_buf cth_jmp_buf;
 static cth_running_t *cth_running = NULL;
 static unsigned cth_running_n = 0;
 static cth_running_t *cth_current = NULL;
+
+typedef struct {
+	int (*condition)(void *priv);
+	void *priv;
+} cth_wait_condition_t;
 
 
 static inline
@@ -132,6 +138,15 @@ void cth_run(void) {
 				_cth_exit();
 			}
 			break;
+		case CTH_STATE_WAITING: {
+			cth_wait_condition_t *head = (cth_wait_condition_t *)cth_current->stack;
+			if (!head->condition(head->priv)) {
+				// Condition false. Keep in state CTH_STATE_WAITING
+				break;
+			}
+			cth_current->state = CTH_STATE_RUNNING;
+			// Falling through to CTH_STATE_RUNNING
+		}
 		case CTH_STATE_RUNNING:
 			longjmp(cth_current->u.running.jmp_buf, 1);
 			// never be here
@@ -171,12 +186,20 @@ void _cth_restore_stack(char *sp, unsigned stack_size) {
 }
 
 
-void cth_yield(void) __attribute__ ((noinline));
-void cth_yield(void) {
+void cth_wait(int (*condition)(void *priv), void *priv) __attribute__ ((noinline));
+void cth_wait(int (*condition)(void *priv), void *priv) {
 	unsigned stack_size;
 	void *sp;
 
 	if (!cth_base_ptr) return; // cth_run() not called.
+
+	if (condition) {
+		// Save condition hook at the stack head. cth_run() has access to it via cth_current->stack.
+		cth_wait_condition_t *head = (cth_wait_condition_t *)alloca(sizeof(condition) + sizeof(priv));
+		head->condition = condition;
+		head->priv = priv;
+		cth_current->state = CTH_STATE_WAITING;
+	}
 
 	sp = alloca(0);
 	stack_size = cth_base_ptr - sp;

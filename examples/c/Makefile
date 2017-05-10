@@ -16,17 +16,10 @@ VPATH += $(CTHREAD_DIR)
 PROGS += hello_world
 hello_world: hello_world.o cthread.o
 
-test: test@cprogram
+PROGS += wait_for_condition
+wait_for_condition: wait_for_condition.o cthread.o
 
-#########################################################
-# test@prog: diff `prog <prog.in` with prog.out
-%.in:
-	touch $@ #< empty input
 
-test@%: % %.in
-	@touch .clean.$*.output
-	$(abspath $<) < $*.in > $*.output
-	diff -U 5 -p $*.output $*.out
 #########################################################
 
 OBJECTS  += $(wildcard *.o)

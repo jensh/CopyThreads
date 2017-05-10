@@ -34,8 +34,12 @@ void cth_start(void (*start)(void *priv), void *priv);
 
 void cth_run(void);
 
-void cth_yield(void);
+void cth_wait(int (*condition)(void *priv), void *priv);
 
+static inline
+void cth_yield(void) {
+	cth_wait(NULL, NULL);
+}
 
 #ifdef __cplusplus
 }/* extern "C" */
