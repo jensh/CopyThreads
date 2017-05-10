@@ -29,11 +29,11 @@ typedef struct {
 } cth_running_t;
 
 
-void *cth_base_ptr = NULL;
-jmp_buf cth_jmp_buf;
-cth_running_t *cth_running = NULL;
-unsigned cth_running_n = 0;
-cth_running_t *cth_current = NULL;
+static void *cth_base_ptr = NULL;
+static jmp_buf cth_jmp_buf;
+static cth_running_t *cth_running = NULL;
+static unsigned cth_running_n = 0;
+static cth_running_t *cth_current = NULL;
 
 
 static inline
@@ -51,7 +51,7 @@ cth_running_t *cth_slot_allocate(void) {
 	for (i = 0;; i++) {
 		if (i == cth_running_n) {
 			// Append
-			unsigned idx_current = cth_current - cth_running;
+			unsigned idx_current = cth_current_idx();
 			cth_running_n++;
 			cth_running = realloc(cth_running, sizeof(cth_running_t) * cth_running_n);
 
@@ -84,7 +84,6 @@ void cth_slots_cleanup_and_start(void) {
 
 
 void cth_start(void (*start)(void *priv), void *priv) {
-	unsigned i;
 	cth_running_t *cth_new = cth_slot_allocate();
 
 	cth_new->state = CTH_STATE_START;
