@@ -6,6 +6,7 @@ CTHREAD_DIR = ../../src
 
 CPPFLAGS += -MMD -I$(CTHREAD_DIR)
 CFLAGS   += -Wall -W -Wno-unused-parameter -Wno-unused -g
+CFLAGS   += -Wconversion -Wsign-conversion
 LDFLAGS  += -g
 LDLIBS += $(LDLIBS_$@)
 

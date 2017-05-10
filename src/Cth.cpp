@@ -20,6 +20,18 @@
  * 2017-05-10 Jens Hauke <jens.hauke@4k2.de>
  */
 
+#include <Arduino.h>
 #include "Cth.h"
+
+static
+int millis_ge(unsigned long ms) {
+	return ((long)(millis() - ms)) >= 0;
+}
+
+
+void CthClass::delay(unsigned long ms) {
+	ms += millis();
+	cth_wait(millis_ge, ms);
+}
 
 CthClass Cth;

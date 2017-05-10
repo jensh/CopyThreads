@@ -29,16 +29,15 @@
 
 unsigned thread2count = 0;
 
-int compare_t2count(void *arg) {
-	unsigned uarg = (long)arg;
+int compare_t2count(unsigned long arg) {
 	// printf("Compare %u == %u\n", thread2count, uarg);
-	return thread2count == uarg;
+	return thread2count == arg;
 }
 
 
 void thread1(void *arg) {
 	printf("Thread 1. Wait for thread2count == 3\n");
-	cth_wait(compare_t2count, (void*)3);
+	cth_wait(compare_t2count, 3);
 	printf("Thread 1 awake and done.\n");
 }
 

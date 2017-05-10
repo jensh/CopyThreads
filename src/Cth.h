@@ -33,8 +33,9 @@ public:
 		cth_start((cth_thread_t)start, NULL);
 	}
 
+#if __SIZEOF_POINTER__ >= __SIZEOF_INT__
 	static inline
-	void start(void (*start)(int), unsigned arg) {
+	void start(void (*start)(int), int arg) {
 		cth_start((cth_thread_t)start, (void*)arg);
 	}
 
@@ -42,7 +43,9 @@ public:
 	void start(void (*start)(unsigned), unsigned arg) {
 		cth_start((cth_thread_t)start, (void*)arg);
 	}
+#endif
 
+#if __SIZEOF_POINTER__ >= __SIZEOF_LONG__
 	static inline
 	void start(void (*start)(long), long arg) {
 		cth_start((cth_thread_t)start, (void*)arg);
@@ -52,11 +55,7 @@ public:
 	void start(void (*start)(unsigned long), unsigned long arg) {
 		cth_start((cth_thread_t)start, (void*)arg);
 	}
-
-	static inline
-	void start(void (*start)(char *), char *arg) {
-		cth_start((cth_thread_t)start, (void*)arg);
-	}
+#endif
 
 	template <typename T>
 	static inline
@@ -73,6 +72,9 @@ public:
 	void yield(void) {
 		cth_yield();
 	}
+
+	static
+	void delay(unsigned long ms);
 };
 
 extern CthClass Cth;

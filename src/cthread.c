@@ -23,6 +23,7 @@
 #include <alloca.h>
 #include <string.h>
 #include <setjmp.h>
+#include "cthread.h"
 
 
 #define CTH_STATE_START		0
@@ -55,14 +56,14 @@ static unsigned cth_running_n = 0;
 static cth_running_t *cth_current = NULL;
 
 typedef struct {
-	int (*condition)(void *priv);
-	void *priv;
+	int (*condition)(unsigned long priv);
+	unsigned long priv;
 } cth_wait_condition_t;
 
 
 static inline
-unsigned cth_current_idx(void) {
-	return cth_current - cth_running;
+size_t cth_current_idx(void) {
+	return (size_t)(cth_current - cth_running);
 }
 
 
@@ -75,7 +76,7 @@ cth_running_t *cth_slot_allocate(void) {
 	for (i = 0;; i++) {
 		if (i == cth_running_n) {
 			// Append
-			unsigned idx_current = cth_current_idx();
+			size_t idx_current = cth_current_idx();
 			cth_running_n++;
 			cth_running = realloc(cth_running, sizeof(cth_running_t) * cth_running_n);
 
@@ -164,7 +165,7 @@ void cth_run(void) {
 
 
 static inline
-void _cth_backup_stack(char *sp, unsigned stack_size) {
+void _cth_backup_stack(char *sp, size_t stack_size) {
 //	assert((void*)sp < cth_base_ptr);
 
 	cth_current->stack = realloc(cth_current->stack, stack_size);
@@ -175,7 +176,7 @@ void _cth_backup_stack(char *sp, unsigned stack_size) {
 
 
 static inline
-void _cth_restore_stack(char *sp, unsigned stack_size) {
+void _cth_restore_stack(char *sp, size_t stack_size) {
 //	printf("#%u restore stack of size %4u %p from %p\n", cth_current_idx(), stack_size, sp, cth_current->stack);
 //	volatile char x;
 	memcpy(sp,
@@ -186,9 +187,9 @@ void _cth_restore_stack(char *sp, unsigned stack_size) {
 }
 
 
-void cth_wait(int (*condition)(void *priv), void *priv) __attribute__ ((noinline));
-void cth_wait(int (*condition)(void *priv), void *priv) {
-	unsigned stack_size;
+void cth_wait(int (*condition)(unsigned long priv), unsigned long priv) __attribute__ ((noinline));
+void cth_wait(int (*condition)(unsigned long priv), unsigned long priv) {
+	size_t stack_size;
 	void *sp;
 
 	if (!cth_base_ptr) return; // cth_run() not called.
@@ -202,7 +203,7 @@ void cth_wait(int (*condition)(void *priv), void *priv) {
 	}
 
 	sp = alloca(0);
-	stack_size = cth_base_ptr - sp;
+	stack_size = (size_t)(cth_base_ptr - sp);
 
 	_cth_backup_stack(sp, stack_size);
 
@@ -213,7 +214,7 @@ void cth_wait(int (*condition)(void *priv), void *priv) {
 
 	// Recalculate sp and stack_size! (might be clobbered by longjmp)
 	sp = alloca(0);
-	stack_size = cth_base_ptr - sp;
+	stack_size = (size_t)(cth_base_ptr - sp);
 
 	_cth_restore_stack(sp, stack_size);
 }

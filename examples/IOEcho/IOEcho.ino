@@ -57,9 +57,11 @@ void counter(int delay_ms) {
 	for (count = 0; ; count++) {
 		Serial.print("Count:");
 		Serial.print(count);
+		Serial.print(" millis:");
+		Serial.print(millis());
 		Serial.println(" Your input?");
 
-		delay(delay_ms);
+		Cth.delay(delay_ms);
 	}
 }
 

@@ -65,7 +65,8 @@ Include the CopyThreads header to your project
 ```
 
 If you use `delay()`, you should implement `yield()` and call
-`Cth.yield()` within:
+`Cth.yield()` within. Less expensive is the use of `Cth.delay()`
+instead!
 
 ```C++
 void yield() {
@@ -80,7 +81,7 @@ the function returns. The thread should use ONLY non blocking functions
 `Stream.readString()` without `setTimeout(0)`). Time consuming or busy
 waiting loops should call `Cth.yield()` to give cpu time to other
 threads. `delay()` is allowed, as it implicitly calls `Cth.yield()`
-when you implement `yield()` as shown above.
+when you implement `yield()` as shown above (But prefer `Cth.delay()`!).
 
 
 ```C++
@@ -153,14 +154,12 @@ Missing features / ToDos
    round robin.
  * Direct context switch from current thread to the next thread
    without an intermediate longjmp to `cth_run()`.
- * Build-in "`delay()`". Threads in state "sleeping" might be woken up at
-   a scheduled time. This would be cheaper than doing a full context
-   switch to the thread just to see, that the threat has to sleep
-   longer.
- * Build-in "`wait_for()`". Sleep until a boolean function returns
-   true. Check a "`wait_for()`" condition without the need to resume the
-   thread. e.g. "`wait_for(Serial0_available);`" instead of an
-   expensive "`while (!Serial0_available()) cth_yield();`".
+ * Build-in "`Cth.delay(ms)`". Missing documentation for `Cth.delay()`.
+ * Build-in "`cth_wait()`". Sleep until a boolean function returns
+   true. Check a condition  without the need to resume the
+   thread. e.g. "`wait_for(Serial0_available);`" instead of
+   an expensive "`while (!Serial0_available()) cth_yield();`". Missing
+   documentation. Missing c++ API.
 
 Alternative approaches for concurrent programming
 -------------------------------------------------

@@ -45,9 +45,9 @@ void blink1(void) {
 	for (unsigned i = 0; i < 10; i++) {
 		Serial.print("LED1 "); Serial.println(i);
 		digitalWrite(LED_PIN1, HIGH);
-		delay(1000);
+		Cth.delay(1000);
 		digitalWrite(LED_PIN1, LOW);
-		delay(1000);
+		Cth.delay(1000);
 	}
 }
 
@@ -57,9 +57,9 @@ void blink2(int arg) {
 		Serial.print("LED2 "); Serial.print(i);
 		Serial.print(" pin "); Serial.println(arg);
 		digitalWrite(arg, HIGH);
-		delay(800);
+		Cth.delay(800);
 		digitalWrite(arg, LOW);
-		delay(800);
+		Cth.delay(800);
 	}
 }
 
