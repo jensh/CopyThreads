@@ -25,6 +25,14 @@
 #include <stddef.h>
 #include "cthread.h"
 
+
+template <class C, int (C::*method)(void)>
+int condition(unsigned long arg) {
+	C *c = (C*)arg;
+	return (c->*method)();
+}
+
+
 class CthClass
 {
 public:
@@ -75,7 +83,30 @@ public:
 
 	static
 	void delay(unsigned long ms);
+
+	// Wait for c.available().
+	// e.g.: Cth.wait_available(Serial);
+	template <class C>
+	static inline
+	void wait_available(C &c) {
+		wait<C, &C::available>(c);
+	}
+
+	// Wait for member function
+	// e.g.: Cth.wait<HardwareSerial,&HardwareSerial::available>(Serial);
+	template <class C, int (C::*method)(void)>
+	static inline
+	void wait(C &c) {
+		cth_wait(condition<C,method>, (unsigned long)&c);
+	}
+
+	// Wait for condition(a_long_priv_arg).
+	static inline
+	void wait(int (*condition)(unsigned long priv), unsigned long priv) {
+		cth_wait(condition, priv);
+	}
 };
+
 
 extern CthClass Cth;
 
