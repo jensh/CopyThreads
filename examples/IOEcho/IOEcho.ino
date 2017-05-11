@@ -38,7 +38,7 @@ void yield() {
 // Thread 1
 void readwrite(void) {
 	while (true) {
-		while (!Serial.available()) Cth.yield();
+		Cth.wait_available(Serial);
 
 		// Read text. To not block other threads,
 		// call Serial.setTimeout(0) before!
