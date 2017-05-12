@@ -29,6 +29,7 @@ extern "C" {
 #endif
 
 typedef void (*cth_thread_t)(void *priv);
+typedef int (*cth_condition_t)(unsigned long priv);
 
 void cth_start(void (*start)(void *priv), void *priv);
 

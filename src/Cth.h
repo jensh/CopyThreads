@@ -105,6 +105,47 @@ public:
 	void wait(int (*condition)(unsigned long priv), unsigned long priv) {
 		cth_wait(condition, priv);
 	}
+
+	// Wait for condition(void).
+	static inline
+	void wait(int (*condition)(void)) {
+		cth_wait((cth_condition_t)condition, 0);
+	}
+
+#if __SIZEOF_POINTER__ >= __SIZEOF_INT__
+	// Wait for condition(int).
+	static inline
+	void wait(int (*condition)(int), int arg) {
+		cth_wait((cth_condition_t)condition, arg);
+	}
+
+	// Wait for condition(unsigned int).
+	static inline
+	void wait(int (*condition)(unsigned int), unsigned int arg) {
+		cth_wait((cth_condition_t)condition, arg);
+	}
+#endif
+
+#if __SIZEOF_POINTER__ >= __SIZEOF_LONG__
+	// Wait for condition(long).
+	static inline
+	void wait(int (*condition)(long), long arg) {
+		cth_wait((cth_condition_t)condition, arg);
+	}
+
+	// Wait for condition(unsigned int).
+	static inline
+	void wait(int (*condition)(unsigned long), unsigned long arg) {
+		cth_wait((cth_condition_t)condition, arg);
+	}
+#endif
+	// Wait for condition(T *a_ptr_arg)
+	template <typename T>
+	static inline
+	void wait(int (*condition)(T *), T *arg) {
+		cth_wait((cth_condition_t)condition, (unsigned long)arg);
+	}
+
 };
 
 
