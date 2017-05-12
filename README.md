@@ -215,6 +215,15 @@ Missing features / ToDos
 
 Alternative approaches for concurrent programming
 -------------------------------------------------
+ * Scheduler, the Arduino scheduler  
+   https://github.com/arduino-libraries/Scheduler  
+   Support only for SAM and SAMD architectures.  
+   cooperative scheduler
+
+ * Arduino-Scheduler  
+   https://github.com/mikaelpatel/Arduino-Scheduler  
+   An extended sub-set of the Arduino Scheduler.
+
  * Protothread  
    Stackless threads. Just do not use the stack.  
    [https://en.wikipedia.org/wiki/Protothread](https://en.wikipedia.org/wiki/Protothread)  
