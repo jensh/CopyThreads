@@ -1,5 +1,5 @@
-CopyThreads: A lightweight threading library
-==============================================
+CopyThreads: A lightweight threading library (not only for microcontrollers)
+============================================================================
 
 tl;dr
 Create your threads by `Cth.start(start_func, arg)`, call `Cth.yield()`
@@ -64,6 +64,90 @@ Include the CopyThreads header to your project
 #include <Cth.h>
 ```
 
+A thread entry is a void function with at most one argument fitting inside a
+void pointer. It is started with `Cth.start(athread, some_arg)` and
+runs until the function returns. The thread should use ONLY non
+blocking functions (e.g. `Stream.available()` or `Stream.read()` but
+NOT `Stream.readString()` without `setTimeout(0)`). Time consuming or
+busy waiting loops should call `Cth.yield()` to give cpu time to other
+threads. `delay()` is allowed, as it implicitly calls `Cth.yield()`
+when you implement `yield()` as shown below. But you should prefer
+`Cth.delay()`!).
+
+Here an example of an asynchronous blinking LED
+```C++
+void athread(void) {
+	bool onoff = false;
+	while (true) {
+		digitalWrite(LED_PIN, onoff ? HIGH : LOW);
+		onoff = !onoff;
+
+		// Progress with other threads,
+		// and continue in 1000ms:
+		Cth.delay(1000);
+	}
+}
+```
+
+Waiting for input from the serial interface. This is when
+`Serial.available()` returns true.
+
+```C++
+void athread(void) {
+	while (true) {
+		// Wait for Serial.available():
+		Cth.wait_available(Serial);
+
+		int ch = Serial.read();
+		Serial.println(ch);
+	}
+}
+```
+
+In general, use `Cth.wait()` to wait for something:
+```C++
+
+unsigned long something = 0;
+
+int compareWith(unsigned long arg) {
+	return something == arg;
+}
+
+int buttonXPressed(void) {
+	return !digitalRead(BUTTONX);
+}
+
+void athread(void) {
+	…
+	// Wait with a method. Here the long version of Cth.wait_available():
+	Cth.wait<HardwareSerial,&HardwareSerial::available>(Serial);
+	…
+	// Wait with a C function. e.g. until a global var reach 5
+	Cth.wait(compareWith, 5);
+	…
+	// Wait with a C function. e.g. until a button is pressed:
+	Cth.wait(buttonXPressd);
+	…
+	// Dont wait, but give other threads the chance to proceed.
+	// e.g. busy wait for input:
+	while (!Serial.available()) Cth.yield();
+	…
+}
+
+```
+
+
+The `loop` should start the first thread(s) and run it(them).
+
+```C++
+void loop() {
+	Cth.start(athread);
+	// Cth.start(athread2);
+	Cth.run();
+}
+```
+
+
 If you use `delay()`, you should implement `yield()` and call
 `Cth.yield()` within. Less expensive is the use of `Cth.delay()`
 instead!
@@ -74,40 +158,10 @@ void yield() {
 }
 ```
 
-A thread is a void function with at most one argument fitting inside a
-void pointer. It is started with `Cth.start(athread, some_arg)` and
-runs until the function returns. The thread should use ONLY non
-blocking functions (e.g. `Stream.available()` or `Stream.read()` but
-NOT `Stream.readString()` without `setTimeout(0)`). Time consuming or
-busy waiting loops should call `Cth.yield()` to give cpu time to other
-threads. `delay()` is allowed, as it implicitly calls `Cth.yield()`
-when you implement `yield()` as shown above (But prefer
-`Cth.delay()`!).
-
-
-```C++
-void athread(void) {
-	while (true) {
-		// busy wait for input
-		while (!Serial.available()) Cth.yield();
-
-		int ch = Serial.read();
-		Serial.print(ch);
-	}
-}
-```
-
-The `loop` should start the first thread(s) and run them.
-
-```C++
-void loop() {
-	Cth.start(athread);
-	Cth.run();
-}
-```
 
 ### Examples
 
+ * Examples from above [./examples/ExamplesFromReadme/ExamplesFromReadme.ino](./examples/ExamplesFromReadme/ExamplesFromReadme.ino).
  * Blink two LEDs [./examples/CTBlink/CTBlink.ino](./examples/CTBlink/CTBlink.ino).
  * Uppercase echo of the serial input while also counting [./examples/IOEcho/IOEcho.ino](./examples/IOEcho/IOEcho.ino).
 
@@ -155,12 +209,7 @@ Missing features / ToDos
    round robin.
  * Direct context switch from current thread to the next thread
    without an intermediate longjmp to `cth_run()`.
- * Build-in "`Cth.delay(ms)`". Missing documentation for `Cth.delay()`.
- * Build-in "`cth_wait()`". Sleep until a boolean function returns
-   true. Check a condition  without the need to resume the
-   thread. e.g. "`wait_for(Serial0_available);`" instead of
-   an expensive "`while (!Serial0_available()) cth_yield();`". Missing
-   documentation. Missing c++ API.
+
 
 Alternative approaches for concurrent programming
 -------------------------------------------------
