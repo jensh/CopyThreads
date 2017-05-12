@@ -33,28 +33,6 @@ Keywords: Green Threads, cooperative threads, cooperative
 multitasking, non-preempted
 
 
-### Features
- * pure C core
- * small RAM overhead (about 60 bytes per thread on AVR MCUs).
- * Threads with large stacks are allowed (if needed. You should avoid).
- * Only the used part of the stack is copied (when switching the
-   context). Tiny threads only require little heap memory.
- * Yield from everywhere in the calling stack.
-
-### But
- * A context switch might be expensive (cpu time) on "big" threads.
- * References to stack memory (local variables) are only valid in the
-   current thread.
- * Hard to predict overall memory usage. The heap might get very
-   fragmented.
-
-### Tips
- * Avoid to many local variables. They are hosted on the stack.
- * Avoid yielding (context switching) within a deep calling tree.
- * Save complex state on the heap and hold only a reference to it on
-   the stack.
-
-
 Arduino usage
 -------------
 
@@ -202,6 +180,30 @@ int main(int argc, char **argv)
 
 ### Examples
  * Hello World [./examples/c/hello_world.c](./examples/c/hello_world.c).
+
+Features
+--------
+ * pure C core
+ * C++ API intended for Arduino projects
+ * small RAM overhead (about 60 bytes (ToDo: measure) per thread on AVR MCUs).
+ * Threads with large stacks are allowed (if needed. You should avoid).
+ * Only the used part of the stack is copied (when switching the
+   context). Tiny threads only require little heap memory.
+ * Yield from everywhere in the calling stack.
+
+### But
+ * A context switch might be expensive (in cpu time) on "big" threads.
+ * References to stack memory (local variables) are only valid in the
+   current thread.
+ * Hard to predict overall memory usage. The heap might get very
+   fragmented.
+
+### Tips
+ * Avoid to many local variables. They are hosted on the stack.
+ * Avoid yielding (context switching) within a deep calling tree.
+ * Save complex state on the heap and hold only a reference to it on
+   the stack.
+
 
 Missing features / ToDos
 ------------------------
