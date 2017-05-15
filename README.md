@@ -164,7 +164,7 @@ void LoopOrThread(void) {
  * Examples from above [./examples/ExamplesFromReadme/ExamplesFromReadme.ino](./examples/ExamplesFromReadme/ExamplesFromReadme.ino).
  * Blink two LEDs [./examples/CTBlink/CTBlink.ino](./examples/CTBlink/CTBlink.ino).
  * Uppercase echo of the serial input while also counting [./examples/IOEcho/IOEcho.ino](./examples/IOEcho/IOEcho.ino).
-
+ * Multiple loops and one thread [./examples/MultipleLoops/MultipleLoops.ino](./examples/MultipleLoops/MultipleLoops.ino).
 
 Plain C
 -----------
