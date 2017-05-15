@@ -117,6 +117,18 @@ void cth_start(void (*start)(void *priv), void *priv) {
 }
 
 
+static
+void cth_startloop_helper(void *_start) {
+	void (*start)(void) = _start;
+	while (1) start();
+}
+
+
+void cth_startloop(void (*start)(void)) {
+	cth_start(cth_startloop_helper, start);
+}
+
+
 static inline
 void _cth_exit(void) {
 	free(cth_current->stack);

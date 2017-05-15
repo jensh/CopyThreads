@@ -33,6 +33,8 @@ typedef int (*cth_condition_t)(unsigned long priv);
 
 void cth_start(void (*start)(void *priv), void *priv);
 
+void cth_startloop(void (*start)(void));
+
 void cth_run(void);
 
 void cth_wait(int (*condition)(unsigned long priv), unsigned long priv);

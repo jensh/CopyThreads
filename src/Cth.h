@@ -71,6 +71,13 @@ public:
 		cth_start((cth_thread_t)start, (void*)arg);
 	}
 
+
+	static inline
+	void startLoop(void (*start)(void)) {
+		cth_startloop(start);
+	}
+
+
 	static inline
 	void run(void) {
 		cth_run();
