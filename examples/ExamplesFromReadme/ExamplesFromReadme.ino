@@ -42,7 +42,8 @@ void setup() {
 	Scheduler.startLoop(loopBlink);
 	Scheduler.startLoop(loopSerial);
 	Scheduler.startLoop(loopButton);
-	Scheduler.start(athreadSomething, 5);
+	Scheduler.start(threadSomething, 5);
+	Scheduler.start(threadY);
 }
 
 
@@ -100,7 +101,19 @@ void loopButton(void) {
 }
 
 
-void athreadPrintDelayed(const char *text) {
+/* Will print:
+ * "Now and than."
+ */
+void threadY() {
+	Scheduler.delay(5000);
+	// print in 1sec:
+	Scheduler.start(threadPrintDelayed, "than.");
+	Serial.print("Now and ");
+	Scheduler.delay(5000);
+}
+
+
+void threadPrintDelayed(const char *text) {
 	Scheduler.delay(1000);
 	Serial.println(text);
 }
@@ -111,7 +124,7 @@ int compareButtonPressCountWith(unsigned long arg) {
 }
 
 
-void athreadSomething(int count) {
+void threadSomething(int count) {
 	while (true) {
 		// Wait for count button presses
 		Scheduler.wait(compareButtonPressCountWith, count);
@@ -122,6 +135,6 @@ void athreadSomething(int count) {
 		buttonPressCount = 0; // reset
 
 		// Start a thread from within a thread
-		Scheduler.start(athreadPrintDelayed, "Heyho");
+		Scheduler.start(threadPrintDelayed, "Heyho");
 	}
 }

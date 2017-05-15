@@ -65,15 +65,17 @@ any time.
 ```C++
 /* Will print:
  * "Now and than."
+ */
 void loopY() {
 	…
 	// print in 1sec:
-	Scheduler.start(athreadPrintDelayed, "than.");
+	Scheduler.start(threadPrintDelayed, "than.");
 	Serial.print("Now and ");
+	…
 }
 
 
-void athreadPrintDelayed(const char *text) {
+void threadPrintDelayed(const char *text) {
 	Scheduler.delay(1000);
 	Serial.println(text);
 }
