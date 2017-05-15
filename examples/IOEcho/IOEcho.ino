@@ -26,19 +26,15 @@
 void setup() {
 	Serial.begin (115200);
 	Serial.setTimeout(0); // do not block in Serial.readString()
+	Scheduler.startLoop(loopReadwrite);
+	Scheduler.start(loopCounter, 5000);
 }
 
 
-void yield() {
-	// yield is called within delay()
-	Cth.yield();
-}
-
-
-// Thread 1
-void readwrite(void) {
+// Loop 1
+void loopReadwrite(void) {
 	while (true) {
-		Cth.wait_available(Serial);
+		Scheduler.wait_available(Serial);
 
 		// Read text. To not block other threads,
 		// call Serial.setTimeout(0) before!
@@ -51,24 +47,14 @@ void readwrite(void) {
 }
 
 
-// Thread 2
-void counter(int delay_ms) {
+// Loop 2
+void loopCounter(int delay_ms) {
 	unsigned count;
 	for (count = 0; ; count++) {
 		Serial.print("Count:");
 		Serial.print(count);
-		Serial.print(" millis:");
-		Serial.print(millis());
 		Serial.println(" Your input?");
 
-		Cth.delay(delay_ms);
+		Scheduler.delay(delay_ms);
 	}
-}
-
-
-void loop() {
-	Cth.start(readwrite);
-	Cth.start(counter, 5000);
-
-	Cth.run();
 }

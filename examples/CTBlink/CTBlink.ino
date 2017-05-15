@@ -19,7 +19,7 @@
   Blink Multithreaded.
 
   Turn an LED on for one second, then off for one second, repeatedly.
-  Turn another LED on for 800 ms, then off for 800 ms, repeatedly.
+  Turn another LED on for 500 ms, then off for 500 ms, repeatedly.
 
   2017-05-08 Jens Hauke <jens.hauke@4k2.de>
 */
@@ -31,46 +31,42 @@
 // the setup function runs once when you press reset or power the board
 void setup() {
 	Serial.begin (115200);
+
 	pinMode(LED_PIN1, OUTPUT);
 	pinMode(LED_PIN2, OUTPUT);
-}
 
-
-void yield() {
-	Cth.yield();
+	Scheduler.startLoop(blink1);
+	Scheduler.startLoop(blink2);
 }
 
 
 void blink1(void) {
-	for (unsigned i = 0; i < 10; i++) {
-		Serial.print("LED1 "); Serial.println(i);
-		digitalWrite(LED_PIN1, HIGH);
-		Cth.delay(1000);
-		digitalWrite(LED_PIN1, LOW);
-		Cth.delay(1000);
-	}
+	Serial.print("LED1 HIGH"); Serial.println(millis());
+
+	digitalWrite(LED_PIN1, HIGH);
+
+	Scheduler.delay(1000);
+
+	Serial.print("LED1 LOW "); Serial.println(millis());
+
+	digitalWrite(LED_PIN1, LOW);
+
+	Scheduler.delay(1000);
 }
 
 
-void blink2(int arg) {
-	for (unsigned i = 0; i < 10; i++) {
-		Serial.print("LED2 "); Serial.print(i);
-		Serial.print(" pin "); Serial.println(arg);
-		digitalWrite(arg, HIGH);
-		Cth.delay(800);
-		digitalWrite(arg, LOW);
-		Cth.delay(800);
-	}
-}
+void blink2(void) {
+	Scheduler.delay(250);
 
+	Serial.print("LED2 HIGH "); Serial.println(millis());
 
-// the loop function runs over and over again forever
-void loop() {
-	Cth.start(blink1);
-	Cth.start(blink2, LED_PIN2); // int arg example
+	digitalWrite(LED_PIN2, HIGH);
 
-	// Run threads until all are done.
-	Cth.run();
+	Scheduler.delay(500);
 
-	Serial.println("restart");
+	Serial.print("LED2 LOW  "); Serial.println(millis());
+
+	digitalWrite(LED_PIN2, LOW);
+
+	Scheduler.delay(250);
 }

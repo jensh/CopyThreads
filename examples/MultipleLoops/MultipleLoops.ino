@@ -23,28 +23,29 @@
   2017-05-15 Jens Hauke <jens.hauke@4k2.de>
 */
 #include <Cth.h>
+//#include <Scheduler.h>
 
 // the setup function runs once when you press reset or power the board
 void setup() {
 	Serial.begin (115200);
 
-	Cth.startLoop(loop1);
+	Scheduler.startLoop(loop1);
 
-	Cth.startLoop(loop2);
+	Scheduler.startLoop(loop2);
 
 	// And one thread only once
-	Cth.start(startOnce);
+	Scheduler.start(startOnce);
 
 }
 
 
 // the loop function runs over and over again forever
 void loop() {
-	Serial.println("Mainloop");
-	Cth.run();
+	Serial.print(millis());
+	Serial.println(" Mainloop");
 
-	// Never be here as Cth.run() runs forever.
-	Serial.println("Mainloop done");
+	// delay() Works, but Scheduler.delay(1000) should be preferred!
+	// (delay() has more overhead when switching a context.)
 	delay(1000);
 }
 
@@ -52,19 +53,25 @@ void loop() {
 void loop1(void) {
 	Serial.print(millis());
 	Serial.println(" Loop1");
-	Cth.delay(1000);
+
+	Scheduler.delay(1000);
 }
 
 
 void loop2(void) {
 	Serial.print(millis());
 	Serial.println(" Loop2");
-	Cth.delay(2000);
+
+	Scheduler.delay(2000);
 }
 
 
 void startOnce(void) {
 	Serial.print(millis());
 	Serial.println(" Once");
-	Cth.delay(1000);
+
+	Scheduler.delay(1000);
+
+	Serial.print(millis());
+	Serial.println(" Once done");
 }

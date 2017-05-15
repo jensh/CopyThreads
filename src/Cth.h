@@ -88,6 +88,7 @@ public:
 		cth_yield();
 	}
 
+
 	static
 	void delay(unsigned long ms);
 
@@ -156,6 +157,21 @@ public:
 };
 
 
-extern CthClass Cth;
+class SchedulerClass : public CthClass
+{
+public:
+	SchedulerClass();
+};
+
+
+extern SchedulerClass Scheduler;
+
+
+/*
+ * loop() hacks
+ */
+void loopCthMain(void);
+
+#define loop loopCthMain
 
 #endif /* _CTH_H_ */

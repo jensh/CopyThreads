@@ -38,40 +38,49 @@ void setup() {
 
 	pinMode(LED_PIN, OUTPUT);
 	pinMode(BUTTON_PIN, INPUT_PULLUP);
+
+	Scheduler.startLoop(loopBlink);
+	Scheduler.startLoop(loopSerial);
+	Scheduler.startLoop(loopButton);
+	Scheduler.start(athreadSomething, 5);
+}
+
+
+void loop() {
+	// Start threads
+	Serial.println("MainLoop");
+	Scheduler.delay(1000);
 }
 
 
 // Blink LED on pin LED_PIN every second.
-void athreadBlink(void) {
+void loopBlink(void) {
 	bool onoff = false;
-	while (true) {
-		digitalWrite(LED_PIN, onoff ? HIGH : LOW);
 
-		Serial.print("LED is ");
-		Serial.println(onoff ? "on" : "off");
+	digitalWrite(LED_PIN, onoff ? HIGH : LOW);
 
-		onoff = !onoff;
+	Serial.print("LED is ");
+	Serial.println(onoff ? "on" : "off");
 
-		// Progress with other threads,
+	onoff = !onoff;
+
+	// Progress with other threads,
 		// and continue in 1000ms:
-		Cth.delay(1000);
-	}
+	Scheduler.delay(1000);
 }
 
 
-void athreadSerial(void) {
-	while (true) {
-		// Wait for Serial.available():
-		Cth.wait_available(Serial);
+void loopSerial(void) {
+	// Wait for Serial.available():
+	Scheduler.wait_available(Serial);
 
-		// Wait with a method. Here the long version of Cth.wait_available():
-		Cth.wait<HardwareSerial,&HardwareSerial::available>(Serial);
+	// Wait with a method. Here the long version of Scheduler.wait_available():
+	Scheduler.wait<HardwareSerial,&HardwareSerial::available>(Serial);
 
-		// Print as numeric value
-		int ch = Serial.read();
-		Serial.print("Read:");
-		Serial.println(ch);
-	}
+	// Print as numeric value
+	int ch = Serial.read();
+	Serial.print("Read:");
+	Serial.println(ch);
 }
 
 
@@ -82,21 +91,19 @@ int buttonPressed(void) {
 }
 
 
-void athreadButton(void) {
-	while (true) {
-		Cth.wait(buttonPressed);
+void loopButton(void) {
+	Scheduler.wait(buttonPressed);
 
-		buttonPressCount++;
-		Serial.println("ButtonPressed");
+	buttonPressCount++;
+	Serial.println("ButtonPressed");
 
-		// de-bounce 500ms
-		Cth.delay(500);
-	}
+	// de-bounce 500ms
+	Scheduler.delay(500);
 }
 
 
 void athreadPrintDelayed(const char *text) {
-	Cth.delay(1000);
+	Scheduler.delay(1000);
 	Serial.println(text);
 }
 
@@ -109,7 +116,7 @@ int compareButtonPressCountWith(unsigned long arg) {
 void athreadSomething(int count) {
 	while (true) {
 		// Wait for count button presses
-		Cth.wait(compareButtonPressCountWith, count);
+		Scheduler.wait(compareButtonPressCountWith, count);
 
 		Serial.print("ButtonPressCount:");
 		Serial.println(buttonPressCount);
@@ -117,24 +124,6 @@ void athreadSomething(int count) {
 		buttonPressCount = 0; // reset
 
 		// Start a thread from within a thread
-		Cth.start(athreadPrintDelayed, "Heyho");
+		Scheduler.start(athreadPrintDelayed, "Heyho");
 	}
-}
-
-
-void yield() {
-	// yield is called within delay()
-	Cth.yield();
-}
-
-
-void loop() {
-	// Start threads
-	Cth.start(athreadBlink);
-	Cth.start(athreadSerial);
-	Cth.start(athreadButton);
-	Cth.start(athreadSomething, 5);
-
-	// Run them
-	Cth.run();
 }

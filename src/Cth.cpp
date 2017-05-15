@@ -34,4 +34,40 @@ void CthClass::delay(unsigned long ms) {
 	cth_wait(millis_ge, ms);
 }
 
-CthClass Cth;
+// CthClass has static methods only. No need for defining Cth or Scheduler.
+// CthClass Cth;
+// CthClass Scheduler;
+
+
+/*
+ * void yield()
+ */
+
+// Hack: Allow yield chaining
+void yieldCth(void) __attribute__((weak));
+
+
+// We need yield() to allow delay().
+// If you need yield too, please call it yieldCth()!
+void yield() {
+	if (yieldCth) yieldCth();
+	Scheduler.yield();
+}
+
+
+/*
+ * void loop() Hacks
+ */
+
+// Define the original "loop" is optional when using Cth.
+void loopCthMain(void) __attribute__((weak));
+
+
+// Overwrite the original "loop" to call Scheduler.run().
+#undef loop
+void loop() {
+	if (loopCthMain) Scheduler.startLoop(loopCthMain);
+	if (serialEventRun) serialEventRun();
+	Scheduler.run();
+	// Never be here. Scheduler.run() runs forever
+}
