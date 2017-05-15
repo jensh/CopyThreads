@@ -47,31 +47,28 @@ void setup() {
 
 
 void loop() {
-	// Start threads
 	Serial.println("MainLoop");
-	Scheduler.delay(1000);
+	Scheduler.delay(10000);
 }
 
 
 // Blink LED on pin LED_PIN every second.
 void loopBlink(void) {
-	bool onoff = false;
-
-	digitalWrite(LED_PIN, onoff ? HIGH : LOW);
-
-	Serial.print("LED is ");
-	Serial.println(onoff ? "on" : "off");
-
-	onoff = !onoff;
+	digitalWrite(LED_PIN, HIGH); Serial.println("LED HIGH");
 
 	// Progress with other threads,
-		// and continue in 1000ms:
+	// and continue in 1000ms:
+	Scheduler.delay(1000);
+
+	digitalWrite(LED_PIN, LOW); Serial.println("LED LOW");
+
 	Scheduler.delay(1000);
 }
 
 
 void loopSerial(void) {
 	// Wait for Serial.available():
+	Serial.println("Waiting for input.");
 	Scheduler.wait_available(Serial);
 
 	// Wait with a method. Here the long version of Scheduler.wait_available():
@@ -92,6 +89,7 @@ int buttonPressed(void) {
 
 
 void loopButton(void) {
+	Serial.println("Waiting for buttonPressed.");
 	Scheduler.wait(buttonPressed);
 
 	buttonPressCount++;

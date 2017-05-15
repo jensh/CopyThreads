@@ -2,8 +2,8 @@ CopyThreads: A lightweight threading library (not only for microcontrollers)
 ============================================================================
 
 tl;dr
-Create your threads by `Cth.start(start_func, arg)`, call `Cth.yield()`
-instead of blocking and run until all threads are done with `Cth.run()`.
+Create your threads by `Scheduler.start(start_func, arg)`, concurent loops
+with `Scheduler.startLoop(loopX)`, and `Scheduler.yield()` instead of blocking.
 
 The main idea of CopyThreads is to copy the stack to the heap when
 switching to another thread. There the name "CopyThreads" comes
@@ -42,28 +42,64 @@ Include the CopyThreads header to your project
 #include <Cth.h>
 ```
 
-A thread entry is a void function with at most one argument fitting inside a
-void pointer. It is started with `Cth.start(athread, some_arg)` and
-runs until the function returns. The thread should use ONLY non
+
+Start your concurrent `loop()` functions from within `setup()` with
+`Scheduler.startLoop(loopX)`. If defined, the traditional `loop()` is
+also called in a loop without an explicit `startLoop(loop)`.
+
+```C++
+void setup() {
+	Scheduler.startLoop(loop1);
+	Scheduler.startLoop(loop2);
+	Scheduler.startLoop(loop3);
+}
+```
+
+
+Run once functions could be implemented as threads. A thread entry is
+a void function with at most one argument fitting inside a void
+pointer. It is started with `Scheduler.start(athread, some_arg)` and
+runs until the function returns. You can start additional threads at
+any time.
+
+```C++
+/* Will print:
+ * "Now and than."
+void loopY() {
+	…
+	// print in 1sec:
+	Scheduler.start(athreadPrintDelayed, "than.");
+	Serial.print("Now and ");
+}
+
+
+void athreadPrintDelayed(const char *text) {
+	Scheduler.delay(1000);
+	Serial.println(text);
+}
+```
+
+
+Inside the `loopX()` and also inside the threads you should call ONLY non
 blocking functions (e.g. `Stream.available()` or `Stream.read()` but
 NOT `Stream.readString()` without `setTimeout(0)`). Time consuming or
-busy waiting loops should call `Cth.yield()` to give cpu time to other
-threads. `delay()` is allowed, as it implicitly calls `Cth.yield()`
-when you implement `yield()` as shown below. But you should prefer
-`Cth.delay()`!).
+busy waiting loops should call `Scheduler.yield()` to give cpu time to other
+threads. `delay()` is allowed, as it implicitly calls `Scheduler.yield()`.
+But you should prefer `Scheduler.delay()` because the overhead when
+switching between waiting threads is much smaller with `Scheduler.delay()`.
 
-Here an example of an asynchronous blinking LED
+Here an example of a blinking LED loop
 ```C++
-void athread(void) {
-	bool onoff = false;
-	while (true) {
-		digitalWrite(LED_PIN, onoff ? HIGH : LOW);
-		onoff = !onoff;
+void loopBlink(void) {
+	digitalWrite(LED_PIN, HIGH);
 
-		// Progress with other threads,
-		// and continue in 1000ms:
-		Cth.delay(1000);
-	}
+	// Progress with other threads,
+	// and continue in 1000ms:
+	Scheduler.delay(1000);
+
+	digitalWrite(LED_PIN, LOW);
+
+ 	Scheduler.delay(1000);
 }
 ```
 
@@ -71,18 +107,22 @@ Waiting for input from the serial interface. This is when
 `Serial.available()` returns true.
 
 ```C++
-void athread(void) {
-	while (true) {
-		// Wait for Serial.available():
-		Cth.wait_available(Serial);
+void loopSerial(void) {
+	// Wait for Serial.available():
+	Scheduler.wait_available(Serial);
 
-		int ch = Serial.read();
-		Serial.println(ch);
-	}
+	// Wait with a method. Here the long version of Scheduler.wait_available():
+	Scheduler.wait<HardwareSerial,&HardwareSerial::available>(Serial);
+
+	// Print as numeric value
+	int ch = Serial.read();
+	Serial.print("Read:");
+	Serial.println(ch);
 }
 ```
 
-In general, use `Cth.wait()` to wait for something:
+
+In general, use `Scheduler.wait()` to wait for something:
 ```C++
 
 unsigned long something = 0;
@@ -95,45 +135,25 @@ int buttonXPressed(void) {
 	return !digitalRead(BUTTONX);
 }
 
-void athread(void) {
+void LoopOrThread(void) {
+	// Wait for Serial.available():
+	Scheduler.wait_available(Serial);
 	…
-	// Wait with a method. Here the long version of Cth.wait_available():
-	Cth.wait<HardwareSerial,&HardwareSerial::available>(Serial);
+	// Wait with a method. Here the long version of Scheduler.wait_available():
+	Scheduler.wait<HardwareSerial,&HardwareSerial::available>(Serial);
 	…
 	// Wait with a C function. e.g. until a global var reach 5
-	Cth.wait(compareWith, 5);
+	Scheduler.wait(compareWith, 5);
 	…
 	// Wait with a C function. e.g. until a button is pressed:
-	Cth.wait(buttonXPressd);
+	Scheduler.wait(buttonXPressd);
 	…
 	// Dont wait, but give other threads the chance to proceed.
 	// e.g. busy wait for input:
-	while (!Serial.available()) Cth.yield();
+	while (!Serial.available()) Scheduler.yield();
 	…
 }
 
-```
-
-
-The `loop` should start the first thread(s) and run it(them).
-
-```C++
-void loop() {
-	Cth.start(athread);
-	// Cth.start(athread2);
-	Cth.run();
-}
-```
-
-
-If you use `delay()`, you should implement `yield()` and call
-`Cth.yield()` within. Less expensive is the use of `Cth.delay()`
-instead!
-
-```C++
-void yield() {
-	Cth.yield();
-}
 ```
 
 
