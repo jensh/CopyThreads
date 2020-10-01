@@ -54,6 +54,8 @@ void yield() {
 	Scheduler.yield();
 }
 
+// Define serialEventRun in case the platforms does not provide serialEventRun by itself.
+extern void serialEventRun(void) __attribute__((weak));
 
 /*
  * void loop() Hacks
