@@ -54,6 +54,7 @@ public:
 #endif
 
 #if __SIZEOF_POINTER__ >= __SIZEOF_LONG__
+#if __SIZEOF_LONG__ > __SIZEOF_INT__
 	static inline
 	void start(void (*start)(long), long arg) {
 		cth_start((cth_thread_t)start, (void*)arg);
@@ -63,6 +64,7 @@ public:
 	void start(void (*start)(unsigned long), unsigned long arg) {
 		cth_start((cth_thread_t)start, (void*)arg);
 	}
+#endif
 #endif
 
 	template <typename T>
@@ -135,6 +137,8 @@ public:
 #endif
 
 #if __SIZEOF_POINTER__ >= __SIZEOF_LONG__
+#if __SIZEOF_LONG__ > __SIZEOF_INT__
+
 	// Wait for condition(long).
 	static inline
 	void wait(int (*condition)(long), long arg) {
@@ -146,6 +150,7 @@ public:
 	void wait(int (*condition)(unsigned long), unsigned long arg) {
 		cth_wait((cth_condition_t)condition, arg);
 	}
+#endif
 #endif
 	// Wait for condition(T *a_ptr_arg)
 	template <typename T>
