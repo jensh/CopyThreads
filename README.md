@@ -14,8 +14,13 @@ CopyThreads is open source, hosted on GitHub
 in a very early stage with much room for improvements, it already
 seams to work reliable. So, use at your own risk! It should work on
 every architecture with a stack growing downwards. So far it is tested
-on x86_64 and atmega328 (Arduino) only. Comments, bug reports,
-improvements, pull requests are very welcome!
+on x86_64, atmega328 (Arduino), ESPea32 and some ATTinys only.
+
+Comments, success or bug reports, improvements, pull requests are very welcome!
+So far, i got very little to no feedback at all and do not know if nobody is using
+CopyThreads or it just works seamlessly on many devices ;-).
+
+On which platform are you using CopyThreads?
 
 Motivation
 ----------
